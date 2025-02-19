@@ -36,6 +36,8 @@ function Dashboard() {
   const [newTask, setNewTask] = useState({
     title: '', description: [], status: 'Chưa làm', createdAt: '', dueDate: '', updatedAt: ''
   });
+  const [editingTaskId, setEditingTaskId] = useState(null);
+
   
   const [filter, setFilter] = useState('Tất cả');
   const [searchQuery, setSearchQuery] = useState('');
@@ -71,22 +73,37 @@ useEffect(() => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
   };
 
-  const handleAddTask = () => {
+  const handleSaveTask = () => {
     if (newTask.title && newTask.description) {
       const now = new Date().toISOString();
-      const updatedTasks = [...tasks, { ...newTask, id: Date.now(), createdAt: now, updatedAt: now }];
-      setTasks(updatedTasks);
+  
+      if (editingTaskId) {
+        // Cập nhật công việc hiện tại
+        const updatedTasks = tasks.map(task =>
+          task.id === editingTaskId
+            ? { ...newTask, updatedAt: now }
+            : task
+        );
+        setTasks(updatedTasks);
+        setEditingTaskId(null); // Xóa trạng thái sửa
+      } else {
+        // Thêm công việc mới
+        const updatedTasks = [...tasks, { ...newTask, id: Date.now(), createdAt: now, updatedAt: now }];
+        setTasks(updatedTasks);
+      }
+  
       setNewTask({ title: '', description: '', status: 'Chưa làm', createdAt: '', dueDate: '', updatedAt: '' });
     }
   };
+  
 
   const handleEditTask = (id) => {
     const taskToEdit = tasks.find(task => task.id === id);
     if (taskToEdit) {
-      setNewTask({ ...taskToEdit, updatedAt: new Date().toISOString() });
+      setNewTask({ ...taskToEdit });
+      setEditingTaskId(id); // Đánh dấu công việc đang sửa
     }
   };
-  
 
   const handleCompleteTask = (id) => {
     setTasks(tasks.map(task => task.id === id ? { ...task, status: 'Hoàn thành', updatedAt: new Date().toISOString() } : task));
@@ -132,7 +149,7 @@ useEffect(() => {
                 <option value="Đang làm">Đang làm</option>
                 <option value="Hoàn thành">Hoàn thành</option>
               </select>
-              <button onClick={handleAddTask} className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600">Thêm công việc</button>
+              <button onClick={handleSaveTask} className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"> {editingTaskId ? 'Cập nhật công việc' : 'Thêm công việc'} </button>
             </div>
             <div className="mb-4">
   <input
