@@ -2,23 +2,56 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../partials/Sidebar';
 import Header from '../partials/Header';
+import { useLocation, useNavigate } from 'react-router-dom';
+
 
 function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const[filteredTasks, setFilteredTasks] = useState([]);
-  const handleChange = (event) => {
+  const handleFilterChange = (event) => {
     const value = event.target.value;
     setFilter(value);
+    
+    // Cập nhật URL
+    const params = new URLSearchParams(location.search);
+    params.set('filter', value);
+    navigate(`?${params.toString()}`);
   };
+  
+  const handleSearchChange = (event) => {
+    const value = event.target.value;
+    setSearchQuery(value);
+    
+    // Cập nhật URL
+    const params = new URLSearchParams(location.search);
+    params.set('search', value);
+    navigate(`?${params.toString()}`);
+  };
+  
   
   const [tasks, setTasks] = useState(() => {
     const savedTasks = localStorage.getItem('tasks');
     return savedTasks ? JSON.parse(savedTasks) : [];
   });
   const [newTask, setNewTask] = useState({
-    title: '', description: '', status: 'Chưa làm', createdAt: '', dueDate: '', updatedAt: ''
+    title: '', description: [], status: 'Chưa làm', createdAt: '', dueDate: '', updatedAt: ''
   });
+  
   const [filter, setFilter] = useState('Tất cả');
+  const [searchQuery, setSearchQuery] = useState('');
+  const location = useLocation();
+const navigate = useNavigate();
+
+// Lấy giá trị filter và search từ URL khi trang tải
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const filterParam = params.get('filter');
+  const searchParam = params.get('search');
+  
+  if (filterParam) setFilter(filterParam);
+  if (searchParam) setSearchQuery(searchParam);
+}, [location.search]);
+
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
 
   useEffect(() => {
@@ -60,12 +93,21 @@ function Dashboard() {
   };
 
   const handleDeleteTask = (id) => {
-    setTasks(tasks.filter(task => task.id !== id));
+    const confirmDelete = window.confirm("Bạn có chắc chắn muốn xóa công việc này?");
+    if (confirmDelete) {
+      setTasks(tasks.filter(task => task.id !== id));
+    }
   };
+  
 
   useEffect(() => {
-    setFilteredTasks(tasks.filter(task => filter === 'Tất cả' || task.status === filter));
-  }, [tasks, filter]);
+    setFilteredTasks(tasks.filter(task =>
+      (filter === 'Tất cả' || task.status === filter) &&
+      (task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       task.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    ));
+  }, [tasks, filter, searchQuery]);
+  
   
 
   return (
@@ -83,8 +125,8 @@ function Dashboard() {
             </div>
             <div className="mb-8">
               <input type="text" value={newTask.title} onChange={(e) => setNewTask({ ...newTask, title: e.target.value })} placeholder="Tiêu đề công việc" className="px-4 py-2 border border-gray-300 rounded-md w-full mb-2" />
-              <textarea value={newTask.description} onChange={(e) => setNewTask({ ...newTask, description: e.target.value })} placeholder="Mô tả công việc" className="px-4 py-2 border border-gray-300 rounded-md w-full mb-2" />
-              <input type="date" value={newTask.dueDate} onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })} className="px-4 py-2 border border-gray-300 rounded-md w-full mb-2" />
+              <input type="text" value={newTask.description} onChange={(e) => setNewTask({ ...newTask, description: e.target.value })} placeholder="Nhập mô tả hoặc dán link ảnh..." className="px-4 py-2 border border-gray-300 rounded-md w-full mb-2"
+/>              <input type="date" value={newTask.dueDate} onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })} className="px-4 py-2 border border-gray-300 rounded-md w-full mb-2" />
               <select value={newTask.status} onChange={(e) => setNewTask({ ...newTask, status: e.target.value })} className="px-4 py-2 border border-gray-300 rounded-md w-full mb-2">
                 <option value="Chưa làm">Chưa làm</option>
                 <option value="Đang làm">Đang làm</option>
@@ -93,14 +135,22 @@ function Dashboard() {
               <button onClick={handleAddTask} className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600">Thêm công việc</button>
             </div>
             <div className="mb-4">
-              Tìm kiếm <br></br>
-              <select onChange={handleChange} className="px-4 py-2 border border-gray-300 rounded-md w-50 mb-2">     
-                <option value="Tất cả">Tất cả</option>
-                <option value="Chưa làm">Chưa làm</option>
-                <option value="Đang làm">Đang làm</option>
-                <option value="Hoàn thành">Hoàn thành</option>
-              </select>      
-                </div>
+  <input
+    type="text"
+    placeholder="Tìm kiếm công việc..."
+    value={searchQuery}
+    onChange={handleSearchChange}
+    className="px-4 py-2 border border-gray-300 rounded-md w-full mb-2"
+  />
+  
+  <select onChange={handleFilterChange} value={filter} className="px-4 py-2 border border-gray-300 rounded-md w-50 mb-2">     
+    <option value="Tất cả">Tất cả</option>
+    <option value="Chưa làm">Chưa làm</option>
+    <option value="Đang làm">Đang làm</option>
+    <option value="Hoàn thành">Hoàn thành</option>
+  </select>      
+</div>
+
             <div className="overflow-x-auto bg-white shadow rounded-lg">
               <table className="min-w-full bg-white border border-gray-200">
                 <thead>
@@ -118,14 +168,13 @@ function Dashboard() {
                   {filteredTasks.map(task => (
                     <tr key={task.id} className="border-b hover:bg-gray-50">
                       <td className="px-6 py-4"><Link to={`/task/${task.id}`} className="text-blue-500 underline">{task.title}</Link></td>
-                      <td className="px-6 py-4">{task.description}</td>
-                      <td className={`px-6 py-4 font-semibold ${task.status === 'Hoàn thành' ? 'text-green-500' : task.status === 'Đang làm' ? 'text-yellow-500' : 'text-red-500'}`}>{task.status}</td>
+                      <td className="px-6 py-4"> {task.description.startsWith("http") ? ( <img src={task.description} alt="Hình ảnh công việc" className="w-20 h-20 object-cover rounded-md" /> ) : ( task.description )}</td>                      <td className={`px-6 py-4 font-semibold ${task.status === 'Hoàn thành' ? 'text-green-500' : task.status === 'Đang làm' ? 'text-yellow-500' : 'text-red-500'}`}>{task.status}</td>
                       <td className="px-6 py-4">{new Date(task.createdAt).toLocaleDateString()}</td>
                       <td className="px-6 py-4">{task.dueDate || 'Chưa đặt'}</td>
                       <td className="px-6 py-4">{new Date(task.updatedAt).toLocaleDateString()}</td>
                       <td className="px-6 py-4 text-center">
-                        <button onClick={() => handleEditTask(task.id)} className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-green-600">Sửa</button>
-                        <button onClick={() => handleCompleteTask(task.id)} className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 ml-2">Hoàn thành</button>
+                        <button onClick={() => handleEditTask(task.id)} className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600">Sửa</button>
+                        <button onClick={() => handleCompleteTask(task.id)} className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 ml-2">Hoàn thành</button>
                         <button onClick={() => handleDeleteTask(task.id)} className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 ml-2">Xóa</button>
                       </td>
                     </tr>
