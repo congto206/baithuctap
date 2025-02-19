@@ -2,10 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../partials/Sidebar';
 import Header from '../partials/Header';
-import FilterButton from '../components/DropdownFilter';
 
 function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const[filteredTasks, setFilteredTasks] = useState([]);
+  const handleChange = (event) => {
+    const value = event.target.value;
+    setFilter(value);
+  };
+  
   const [tasks, setTasks] = useState(() => {
     const savedTasks = localStorage.getItem('tasks');
     return savedTasks ? JSON.parse(savedTasks) : [];
@@ -45,9 +50,10 @@ function Dashboard() {
   const handleEditTask = (id) => {
     const taskToEdit = tasks.find(task => task.id === id);
     if (taskToEdit) {
-      setNewTask(taskToEdit);
+      setNewTask({ ...taskToEdit, updatedAt: new Date().toISOString() });
     }
   };
+  
 
   const handleCompleteTask = (id) => {
     setTasks(tasks.map(task => task.id === id ? { ...task, status: 'Hoàn thành', updatedAt: new Date().toISOString() } : task));
@@ -57,9 +63,10 @@ function Dashboard() {
     setTasks(tasks.filter(task => task.id !== id));
   };
 
-  const filteredTasks = tasks.filter(
-    task => filter === 'Tất cả' || task.status === filter
-  );
+  useEffect(() => {
+    setFilteredTasks(tasks.filter(task => filter === 'Tất cả' || task.status === filter));
+  }, [tasks, filter]);
+  
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -86,8 +93,14 @@ function Dashboard() {
               <button onClick={handleAddTask} className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600">Thêm công việc</button>
             </div>
             <div className="mb-4">
-              <FilterButton setFilter={setFilter} />
-            </div>
+              Tìm kiếm <br></br>
+              <select onChange={handleChange} className="px-4 py-2 border border-gray-300 rounded-md w-50 mb-2">     
+                <option value="Tất cả">Tất cả</option>
+                <option value="Chưa làm">Chưa làm</option>
+                <option value="Đang làm">Đang làm</option>
+                <option value="Hoàn thành">Hoàn thành</option>
+              </select>      
+                </div>
             <div className="overflow-x-auto bg-white shadow rounded-lg">
               <table className="min-w-full bg-white border border-gray-200">
                 <thead>
