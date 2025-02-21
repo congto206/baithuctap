@@ -18,6 +18,7 @@ function Statistics() {
     total: 0,
     completed: 0,
     inProgress: 0,
+
     notStarted: 0,
   });
 
@@ -181,7 +182,7 @@ const removeVietnameseTones = (str) => {
                     <th className="px-6 py-3">Mô tả</th>
                     <th className="px-6 py-3">Trạng thái</th>
                     <th className="px-6 py-3">Ngày tạo</th>
-                    <th className="px-6 py-3">Hạn chót</th>
+                    <th className="px-6 py-3">Ngày hoàn thành</th>
                     <th className="px-6 py-3">Cập nhật gần nhất</th>
                     <th className="px-6 py-3 text-center">Hành động</th>
                   </tr>
@@ -201,7 +202,7 @@ const removeVietnameseTones = (str) => {
                           </td>
                           <td className="px-6 py-4">{new Date(task.createdAt || Date.now()).toLocaleDateString()}</td>
                           <td className="px-6 py-4">{task.dueDate? new Date(task.dueDate).toLocaleDateString("vi-VN"): "Chưa đặt"}</td>
-                          <td className="px-6 py-4">{task.updatedAt ? new Date(task.updatedAt).toLocaleString() : "N/A"}</td>
+                          <td className="px-6 py-4">{task.updatedAt ? new Date(task.updatedAt).toLocaleDateString() : "N/A"}</td>
                           <td className="px-6 py-4 text-center flex gap-2 justify-center">
                           <button onClick={() => handleEditTask(task)}  className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600">Sửa</button>
                         <button onClick={() => handleCompleteTask(task.id)} className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 ml-2">Hoàn thành</button>

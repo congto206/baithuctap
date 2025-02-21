@@ -71,7 +71,7 @@ function Dashboard() {
                 type="text" 
                 value={newTask.dueDate} 
                 onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })} 
-                placeholder="Nhập hạn chót (nn/mm/yyyy)" 
+                placeholder="Ngày hoàn thành (nn/mm/yyyy)" 
                 className="px-4 py-2 border border-gray-300 rounded-md w-full mb-3" 
               />
               <button onClick={handleAddOrUpdateTask} className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600">
